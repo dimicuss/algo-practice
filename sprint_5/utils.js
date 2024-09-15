@@ -10,7 +10,7 @@ class CNode {
   }
 }
 
-function generateTree(tree) {
+function generateTree(tree, index = 0) {
   const result = new Map()
   const functions = []
 
@@ -32,7 +32,7 @@ function generateTree(tree) {
 
   functions.forEach((fn) => fn())
 
-  return result.get(0)
+  return result.get(index)
 }
 
 function test(fn) {
