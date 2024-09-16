@@ -67,45 +67,53 @@ if (process.env.REMOTE_JUDGE !== 'true') {
     const result = solution(a)
     console.assert(result === 12, 'E')
   })
+
+  test(() => {
+    const a = generateTree([
+      [0, -10, 1, 2],
+      [1, 1, 3],
+      [2, 24, , 4],
+      [3, 3, 5, 6],
+      [4, 4, 7, 8],
+      [5, 25],
+      [6, 6],
+      [7, 7],
+      [8, 8, 9],
+      [9, 9],
+    ])
+
+    const result = solution(a)
+    console.assert(result === 64, 'F')
+  })
 }
 
-function getAllPaths(node, cb) {
+function getBranchSums(node, sum = 0) {
   if (node !== null) {
-    const l = getAllPaths(node.left, cb)
-    const r = getAllPaths(node.right, cb)
+    const nextSum = sum + node.value
+    const l = getBranchSums(node.left, nextSum)
+    const r = getBranchSums(node.right, nextSum)
 
-    const sums = [node.value]
-
-    if (l.length && r.length) {
-      for (let i = 0; i < l.length; i++) {
-        for (let j = 0; j < r.length; j++) {
-          sums.push(node.value + l[i] + r[j])
-        }
-      }
-    } else if (l.length) {
-      for (let i = 0; i < l.length; i++) {
-        sums.push(node.value + l[i])
-      }
-    } else if (r.length) {
-      for (let j = 0; j < r.length; j++) {
-        sums.push(node.value + r[j])
-      }
-    }
-    cb(sums)
-    return sums
+    return Math.max(nextSum, l, r)
   }
 
-  return []
+  return 0
+}
+
+function getMaximalSum(node) {
+  if (node !== null) {
+    const lMaxSum = getBranchSums(node.left)
+    const rMaxSum = getBranchSums(node.right)
+    const sum = lMaxSum + rMaxSum + node.value
+    const l = getMaximalSum(node.left)
+    const r = getMaximalSum(node.right)
+    return Math.max(sum, l, r)
+  }
+
+  return -Infinity
 }
 
 function solution(...rest) {
-  let result = -Infinity
-
-  getAllPaths(...rest, (sums) => {
-    console.log(sums)
-    result = Math.max(result, Math.max(...sums))
-  })
-
-  return result
+  return getMaximalSum(...rest)
 }
+
 
