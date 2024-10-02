@@ -3,6 +3,7 @@ class CNode {
     this.value = value;
     this.left = null;
     this.right = null;
+    this.size = 1
   }
 
   toString() {

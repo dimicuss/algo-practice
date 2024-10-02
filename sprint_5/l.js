@@ -25,9 +25,7 @@ function siftDown(heap, i) {
 }
 
 function test() {
-  var sample = [undefined, 12, 6, 8, 3, 4, 7];
+  const sample = [undefined, 12, 6, 8, 3, 4, 7];
   console.assert(siftDown(sample, 2) === 2);
 }
-
-test()
 

@@ -13,6 +13,8 @@ function siftUp(heap, i) {
 }
 
 function test() {
-  var sample = [-1, 12, 6, 8, 3, 15, 7];
-  console.assert(siftUp(sample, 5) == 1);
+  const sample = [-1, 12, 6, 8, 3, 15, 7]
+  console.assert(siftUp(sample, 5) == 1)
 }
+
+
