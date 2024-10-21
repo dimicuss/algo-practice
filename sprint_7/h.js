@@ -40,7 +40,7 @@ function readMatrix() {
 }
 
 
-function findMaximalPath(matrix) {
+function getMaxPoints(matrix) {
   const dp = matrix.map((row) => row.map(() => 0))
 
   for (let i = dp.length - 2; i >= 0; i--) {
@@ -57,7 +57,7 @@ function findMaximalPath(matrix) {
 
 function solve() {
   const matrix = readMatrix()
-  console.log(findMaximalPath(matrix))
+  console.log(getMaxPoints(matrix))
 }
 
 
