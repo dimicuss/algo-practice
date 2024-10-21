@@ -22,7 +22,7 @@ const readNumbers = () => {
 }
 
 const readRow = () => {
-  return [-Infinity, ...readLine().split('').map((str) => Number(str))]
+  return [0, ...readLine().split('').map((str) => Number(str))]
 }
 
 function readMatrix() {
@@ -34,28 +34,30 @@ function readMatrix() {
     matrix.push(readRow())
   }
 
-  matrix.push(Array.from({length: m + 1}).fill(-Infinity))
-
-  console.log(matrix)
+  matrix.push(Array.from({length: m + 1}).fill(0))
 
   return matrix
 }
 
 
 function findMaximalPath(matrix) {
-  for (let i = matrix.length - 2; i >= 0; i--) {
-    const row = matrix[i]
+  const dp = matrix.map((row) => row.map(() => 0))
 
-    for (let j = 1; j < row.length; j++) {
-      console.log(row[j])
+  for (let i = dp.length - 2; i >= 0; i--) {
+    for (let j = 1; j < dp[i].length; j++) {
+      dp[i][j] = Math.max(dp[i][j - 1], dp[i + 1][j]) + matrix[i][j]
     }
   }
+
+  const lastRow = dp[0]
+
+  return lastRow[lastRow.length - 1]
 }
 
 
 function solve() {
   const matrix = readMatrix()
-  findMaximalPath(matrix)
+  console.log(findMaximalPath(matrix))
 }
 
 
