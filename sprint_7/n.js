@@ -1,3 +1,4 @@
+const {request} = require('http')
 const readline = require('readline')
 
 const reader = readline.createInterface({
@@ -21,43 +22,80 @@ const readNumber = () => {
   return Number(readLine())
 }
 
-const addPrice = (item, price) => ({
-  ...item,
-  price: item.price + price
-})
+const getCoupons = (price) => price > 500 ? 1 : 0
 
-const addDay = (item, day) => ({
-  ...item,
-  skipped: [day, ...item.skipped]
-})
-
-const byMinimalPrice = (prices, i = 0, c = 0, dp = new Map()) => {
-  const key = `${i},${c}`
-
-  if (dp.has(key)) {
-    return dp.get(key)
+const minBy = (items, key) => items.reduce((result, item) => {
+  if (key(item) < result.value) {
+    result.value = key(item)
+    result.item = item
   }
 
-  if (i < prices.length) {
+  return result
+}, {value: Infinity, item: undefined}).item
+
+const getPrice = ({price}) => price
+
+const byMinimalPrice = (prices) => {
+  let dp = []
+  const initialPrice = prices[0]
+
+  dp[getCoupons(initialPrice)] = {price: prices[0], prev: undefined, i: 0}
+
+  for (let i = 1; i < prices.length; i++) {
     const price = prices[i]
-    const nextCoupons = price > 500 ? c + 1 : c
+    const priceCoupons = getCoupons(price)
 
-    const results = []
+    const nextDp = []
 
-    if (c > 0) {
-      results.push(addDay(byMinimalPrice(prices, i + 1, c - 1, dp), i + 1))
+    for (let j = 0; j < dp.length; j++) {
+      const prev = dp[j]
+
+      if (prev !== undefined) {
+        const newPrice = {price: prev.price + price, prev, i}
+
+        nextDp[j + priceCoupons] = newPrice
+
+        if (j > 0) {
+          const prevJ = nextDp[j - 1]
+          const newPrice = {price: prev.price, prev, i}
+          const toCompare = [newPrice]
+
+          if (prevJ) {
+            toCompare.push(prevJ)
+          }
+
+          nextDp[j - 1] = minBy(toCompare, getPrice)
+        }
+      }
     }
 
-    results.push(addPrice(byMinimalPrice(prices, i + 1, nextCoupons, dp), price))
-
-    const result = results.sort((a, b) => a.price - b.price)[0]
-
-    dp.set(key, result)
-
-    return result
+    dp = nextDp
   }
 
-  return {price: 0, skipped: []}
+  const minimalPrice = minBy(dp, getPrice)
+
+  if (minimalPrice) {
+    let skipped = []
+    let current = minimalPrice
+
+    while (current && current.prev) {
+      if (current.price === current.prev.price) {
+        skipped.push(current.i + 1)
+      }
+
+      current = current.prev
+    }
+
+    return {
+      price: minimalPrice.price,
+      skipped: skipped.reverse()
+    }
+  }
+
+  return {
+    price: undefined,
+    skipped: []
+  }
 }
 
 function solve() {
