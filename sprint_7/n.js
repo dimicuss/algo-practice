@@ -1,4 +1,3 @@
-const {request} = require('http')
 const readline = require('readline')
 
 const reader = readline.createInterface({
