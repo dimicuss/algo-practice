@@ -71,35 +71,48 @@ const indexesOfNextWord = (string, trie, startIndex) => {
   return nextIndexes
 }
 
+const createTask = (index, parent) => {
+  const task = {
+    index,
+    executed: false,
+    result: false,
+    parent,
+  }
+
+  return task
+}
+
 const checkString = (string, trie) => {
   const dp = new Map()
-  const callstack = [{index: 0, executed: false, result: false, parent: undefined}]
+  const callstack = [createTask(0)]
 
   let lastExecutedTask
 
   while (callstack.length > 0) {
-    const tailTask = callstack[callstack.length - 1]
+    const task = callstack[callstack.length - 1]
 
-    if (tailTask.executed) {
-      if (tailTask.parent) {
-        tailTask.parent.result = tailTask.parent.result || tailTask.result
+    if (task.executed) {
+      if (task.parent) {
+        task.parent.result = task.parent.result || task.result
       }
 
-      dp.set(tailTask.index, tailTask.result)
+      dp.set(task.index, task.result)
       lastExecutedTask = callstack.pop()
     } else {
-      tailTask.executed = true
-      const nextIndexes = indexesOfNextWord(string, trie, tailTask.index)
+      const nextIndexes = indexesOfNextWord(string, trie, task.index)
 
-      tailTask.result = tailTask.index >= string.length
+      task.executed = true
+      task.result = task.index >= string.length
 
-      for (let i = nextIndexes.length - 1; i >= 0; i--) {
-        const nextIndex = nextIndexes[i]
+      for (const nextIndex of nextIndexes) {
+        const nextTask = createTask(nextIndex, task)
+
         if (dp.has(nextIndex)) {
-          tailTask.result = tailTask.result || dp.get(nextIndex)
-        } else {
-          callstack.push({index: nextIndex, executed: false, result: false, parent: tailTask})
+          nextTask.result = dp.get(nextIndex)
+          nextTask.executed = true
         }
+
+        callstack.push(nextTask)
       }
     }
   }
