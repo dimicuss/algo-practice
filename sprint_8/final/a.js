@@ -33,14 +33,17 @@ const digitMap = {1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true,
 const isDigit = (char) => digitMap[char] || false
 
 const unpackString = (string) => {
-  let i = 0
   const callStack = [{multiplier: 1, string: ''}]
-
+  let i = 0
+  let result = ''
   let currentDigit = ''
-  while (callStack.length > 0 && i < string.length) {
+
+  while (i <= string.length) {
     const char = string[i]
 
-    if (isDigit(char)) {
+    if (char === undefined) {
+      result = callStack.pop().string
+    } else if (isDigit(char)) {
       currentDigit += char
     } else if (char === '[') {
       callStack.push({
@@ -60,7 +63,7 @@ const unpackString = (string) => {
     i++
   }
 
-  return callStack[callStack.length - 1].string
+  return result
 }
 
 const maxCommonPrefix = (strings) => {
