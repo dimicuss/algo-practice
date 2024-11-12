@@ -71,16 +71,12 @@ const indexesOfNextWord = (string, trie, startIndex) => {
   return nextIndexes
 }
 
-const createTask = (index, parent) => {
-  const task = {
-    index,
-    executed: false,
-    result: false,
-    parent,
-  }
-
-  return task
-}
+const createTask = (index, parent) => ({
+  index,
+  parent,
+  result: false,
+  executed: false,
+})
 
 const checkString = (string, trie) => {
   const dp = new Map()
@@ -101,8 +97,8 @@ const checkString = (string, trie) => {
     } else {
       const nextIndexes = indexesOfNextWord(string, trie, task.index)
 
-      task.executed = true
       task.result = task.index >= string.length
+      task.executed = true
 
       for (const nextIndex of nextIndexes) {
         const nextTask = createTask(nextIndex, task)
