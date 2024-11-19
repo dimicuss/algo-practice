@@ -1,11 +1,11 @@
 const {readFile} = require("fs");
 const {inspect} = require("util");
 
-const atom = '([А-Я][а-я]+(?:-[а-я]+)?(?:\\Wда\\W[А-Я][а-я]+(?:-[а-я]+)?)?)'
+const atom = '([А-Я][а-я]+(?:-[а-я]+)?(?:\\sда\\s[А-Я][а-я]+(?:-[а-я]+)?)?)'
 
 const matchers = [
-  `(?:${atom}\\W${atom}\\W${atom})`,
-  `(?:${atom}\\W${atom})`,
+  `(?:${atom}\\s+${atom}\\s+${atom})`,
+  `(?:${atom}\\s+${atom})`,
   `(?:${atom})`,
 ].join('|')
 
