@@ -1,4 +1,4 @@
-// https://contest.yandex.ru/contest/26133/run-report/125336854/
+// https://contest.yandex.ru/contest/26133/run-report/125854330/
 
 /*
   #ИДЕЯ И ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ#
@@ -20,7 +20,7 @@
 
   #ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ#
 
-  O(n * m), где n динна распакованной строки, а m количество строк
+  O(n), где n динна распакованной строки
 */
 
 const readline = require('readline')
@@ -89,34 +89,29 @@ const unpackString = (string) => {
 }
 
 const maxCommonPrefix = (strings) => {
-  let i = 0
-  let result = ''
+  let prefix = unpackString(strings[0])
 
-  mainLoop: while (true) {
-    const previousSymbol = strings[0][i]
+  if (strings.length > 1) {
+    for (let i = 1; i < strings.length; i++) {
+      const unpackedString = unpackString(strings[i])
 
-    if (previousSymbol === undefined) {
-      break mainLoop
-    }
-
-    for (let j = 1; j < strings.length; j++) {
-      const nextSymbol = strings[j][i]
-      if (previousSymbol !== nextSymbol || nextSymbol === undefined) {
-        break mainLoop
+      for (let j = 0; j < Math.max(unpackedString.length, prefix.length); j++) {
+        if (prefix[j] !== unpackedString[j]) {
+          prefix = unpackedString.slice(0, j)
+          break
+        }
       }
     }
-
-    result += previousSymbol
-    i++
   }
 
-  return result
+
+  return prefix
 }
 
 function solve() {
   const packedStrings = readLines()
 
   console.log(
-    maxCommonPrefix(packedStrings.map(unpackString))
+    maxCommonPrefix(packedStrings)
   )
 }

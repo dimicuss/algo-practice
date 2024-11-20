@@ -70,17 +70,21 @@ const getPermutations = (items, cb, result = []) => {
   }
 }
 
+const maxWindowSize = 4
 const getSubSequences = (sequence) => {
   const result = []
 
-  for (let i = 0; i < sequence.length; i++) {
-    const subSequence = []
+  for (let windowSize = 2; windowSize <= maxWindowSize; windowSize++) {
+    for (let i = 0; i < sequence.length - windowSize + 1; i++) {
+      const subSequence = []
 
-    for (let j = i; j < sequence.length; j++) {
-      subSequence.push(sequence[j])
+      for (let j = i; j < i + windowSize; j++) {
+        subSequence.push(sequence[j])
+      }
+
       const permutations = []
       getPermutations(subSequence, (permutation) => permutations.push(permutation))
-      result.push({subSequence: [...subSequence], permutations})
+      result.push({subSequence, permutations})
     }
   }
 
