@@ -1,13 +1,11 @@
 const {readFile} = require("fs");
 const {inspect} = require("util");
 
-const atom = '([А-Я][а-я]+(?:-[а-я]+)?(?:\\sда\\s[А-Я][а-я]+(?:-[а-я]+)?)?)'
-
-const matchers = [
-  `(?:${atom}\\s+${atom}\\s+${atom})`,
-  `(?:${atom}\\s+${atom})`,
-  `(?:${atom})`,
-].join('|')
+const space = '\\s+'
+const atom = '[А-Я][а-я]+(?:-[а-я]+)?'
+const infixes = ['да']
+const matcher = `(${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?)`
+const matchers = `${matcher}(?:${space}${matcher})?(?:${space}${matcher})?`
 
 const matchNames = (string) => {
   const regex = new RegExp(matchers, 'g')
@@ -16,8 +14,8 @@ const matchNames = (string) => {
   let results = []
 
   while ((result = regex.exec(string)) !== null) {
-    const first = result[1] || result[4] || result[6]
-    const second = result[2] || result[5]
+    const first = result[1]
+    const second = result[2]
     const third = result[3]
     const forms = [first, second, third].filter(Boolean)
 
@@ -30,6 +28,8 @@ const matchNames = (string) => {
       end: result.index + result[0].length,
       formsPermutations
     })
+
+    regex.lastIndex = result.index + result[1].length
   }
 
   return results
