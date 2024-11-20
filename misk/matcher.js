@@ -2,34 +2,53 @@ const {readFile} = require("fs");
 const {inspect} = require("util");
 
 const space = '\\s+'
-const atom = '[А-Я][а-я]+(?:-[а-я]+)?'
+const atom = '[А-ЯЁ][а-яё]+(?:-[а-я]+)?'
 const infixes = ['да']
-const matcher = `(${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?)`
-const matchers = `${matcher}(?:${space}${matcher})?(?:${space}${matcher})?`
+const matcher = `\\(?(${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?)\\)?`
+const matcherUngrouped = `\\(?${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?\\)?`
+
+const matchers = [
+  `(?:${matcher}(?=${space}${matcherUngrouped}))`,
+  `(?:${matcher})`,
+  `(?:[А-Я]\\.\\s*${matcher})`,
+].join('|')
 
 const matchNames = (string) => {
   const regex = new RegExp(matchers, 'g')
 
   let result
   let results = []
+  let chainedResults = []
 
   while ((result = regex.exec(string)) !== null) {
-    const first = result[1]
-    const second = result[2]
-    const third = result[3]
-    const forms = [first, second, third].filter(Boolean)
+    const chained = result[1]
+    if (chained) {
+      chainedResults.push({
+        start: result.index,
+        end: result.index + chained.length,
+        string: chained
+      })
+    } else {
+      const ordinary = result[2] || result[3]
+      chainedResults.push({
+        start: result.index,
+        end: result.index + ordinary.length,
+        string: ordinary
+      })
 
-    const formsPermutations = []
+      results.push({
+        sequence: chainedResults,
+        allSubscequences: getSubSequences(chainedResults)
+      })
+      chainedResults = []
+    }
+  }
 
-    getPermutations(forms, (perm) => formsPermutations.push(perm))
-
+  if (chainedResults.length) {
     results.push({
-      start: result.index,
-      end: result.index + result[0].length,
-      formsPermutations
+      sequence: chainedResults,
+      allSubscequences: getSubSequences(chainedResults)
     })
-
-    regex.lastIndex = result.index + result[1].length
   }
 
   return results
@@ -49,6 +68,23 @@ const getPermutations = (items, cb, result = []) => {
   } else {
     cb(result)
   }
+}
+
+const getSubSequences = (sequence) => {
+  const result = []
+
+  for (let i = 0; i < sequence.length; i++) {
+    const subSequence = []
+
+    for (let j = i; j < sequence.length; j++) {
+      subSequence.push(sequence[j])
+      const permutations = []
+      getPermutations(subSequence, (permutation) => permutations.push(permutation))
+      result.push({subSequence: [...subSequence], permutations})
+    }
+  }
+
+  return result
 }
 
 readFile(0, (_, data) => {
