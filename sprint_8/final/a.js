@@ -1,3 +1,28 @@
+// https://contest.yandex.ru/contest/26133/run-report/125336854/
+
+/*
+  #ИДЕЯ И ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ#
+
+  В основе алгоритма лежит алгоритм проверки скобочных последовательностей через стек.
+  При каждой встреченной левой скобке будем добавлять в стек новую таску, а при правой
+  удаляем из стека текущую и умножаем результат удаленной таски на множитель
+  сохраненный при выполнении предыдущей таски (при получении символа или цифры будем сохранять их в текущу таску как result и digit),
+  далее сложим с результатом текущей таски. Таким образом к концу работы алгоритма, в стеке останентся один элемент с распакованной строкой.
+
+  Далее просто проверим префиксы получившихся строк.
+
+  #ВРЕМЯ ИСПОЛНЕНИЯ#
+  
+  Распаковка займет O(n), где n сдлинна распакованной строки, так как внутри есть умножение и складывание строк между тасками.
+  Проверка префикса займет O(n * m), где n динна распакованной строки, а m количество строк.
+
+  Cуммарно O(n * m)
+
+  #ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ#
+
+  O(n * m), где n динна распакованной строки, а m количество строк
+*/
+
 const readline = require('readline')
 
 const reader = readline.createInterface({
@@ -33,37 +58,34 @@ const digitMap = {1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true,
 const isDigit = (char) => digitMap[char] || false
 
 const unpackString = (string) => {
-  const callStack = [{multiplier: 1, string: ''}]
+  const callStack = [{result: '', digit: ''}]
   let i = 0
-  let result = ''
-  let currentDigit = ''
 
-  while (i <= string.length) {
+  while (i < string.length) {
     const char = string[i]
+    const task = callStack[callStack.length - 1]
 
-    if (char === undefined) {
-      result = callStack.pop().string
-    } else if (isDigit(char)) {
-      currentDigit += char
+    if (isDigit(char)) {
+      task.digit += char
     } else if (char === '[') {
       callStack.push({
-        multiplier: Number(currentDigit),
-        string: ''
+        result: '',
+        digit: '',
       })
-      currentDigit = ''
     } else if (char === ']') {
-      const braceToClose = callStack.pop()
-      const currentBrace = callStack[callStack.length - 1]
-      currentBrace.string += braceToClose.string.repeat(braceToClose.multiplier)
+      const task = callStack.pop()
+      const taskToUpdate = callStack[callStack.length - 1]
+      const multiplier = taskToUpdate.digit ? Number(taskToUpdate.digit) : 1
+      taskToUpdate.result += task.result.repeat(multiplier)
+      taskToUpdate.digit = ''
     } else {
-      const currentBrace = callStack[callStack.length - 1]
-      currentBrace.string += char
+      task.result += char
     }
 
     i++
   }
 
-  return result
+  return callStack[0].result
 }
 
 const maxCommonPrefix = (strings) => {
