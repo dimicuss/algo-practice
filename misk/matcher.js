@@ -1,16 +1,18 @@
 const {readFile} = require("fs");
 const {inspect} = require("util");
 
+const atom = '(?:[A-ZА-ЯЁ][a-zа-яё]+(?:-[a-zа-я]+)?)'
 const space = '\\s+'
-const atom = '[А-ЯЁ][а-яё]+(?:-[а-я]+)?'
 const infixes = ['да']
-const matcher = `\\(?(${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?)\\)?`
-const matcherUngrouped = `\\(?${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?\\)?`
+
+const word = `${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?`
+const reduction = `[A-ZА-ЯЁ]\\.`
+
 
 const matchers = [
-  `(?:${matcher}(?=${space}${matcherUngrouped}))`,
-  `(?:${matcher})`,
-  `(?:[А-Я]\\.\\s*${matcher})`,
+  `(${word})(?=${space}${word})`,
+  `(${word})`,
+  `(${reduction})(?=(?:\\s?${reduction})|(?:\\s?${word}))`
 ].join('|')
 
 const matchNames = (string) => {
@@ -21,30 +23,44 @@ const matchNames = (string) => {
   let chainedResults = []
 
   while ((result = regex.exec(string)) !== null) {
-    const chained = result[1]
-    if (chained) {
+    const chainedWord = result[1]
+    if (chainedWord) {
       chainedResults.push({
         start: result.index,
-        end: result.index + chained.length,
-        string: chained
+        end: result.index + chainedWord.length,
+        string: chainedWord
       })
-    } else {
-      const ordinary = result[2] || result[3]
+    }
+
+    const word = result[2]
+    if (word) {
       chainedResults.push({
         start: result.index,
-        end: result.index + ordinary.length,
-        string: ordinary
+        end: result.index + word.length,
+        string: word
       })
 
-      results.push({
-        sequence: chainedResults,
-        allSubscequences: getSubSequences(chainedResults)
-      })
+      if (chainedResults.length > 1) {
+        results.push({
+          sequence: chainedResults,
+          allSubscequences: getSubSequences(chainedResults)
+        })
+      }
+
       chainedResults = []
+    }
+
+    const reduction = result[3]
+    if (reduction) {
+      chainedResults.push({
+        start: result.index,
+        end: result.index + reduction.length,
+        string: reduction
+      })
     }
   }
 
-  if (chainedResults.length) {
+  if (chainedResults.length > 1) {
     results.push({
       sequence: chainedResults,
       allSubscequences: getSubSequences(chainedResults)
@@ -54,23 +70,48 @@ const matchNames = (string) => {
   return results
 }
 
-const getPermutations = (items, cb, result = []) => {
-  if (items.length > 0) {
-    items.forEach((item, i) => {
-      const nextResult = [...result, item]
+const getPermutations = (itemsToClone) => {
+  const result = []
+  const items = [...itemsToClone]
 
-      getPermutations(
-        items.filter((_, iToFilter) => iToFilter !== i),
-        cb,
-        nextResult,
+  const counters = Array.from({length: items.length}, () => 0)
+
+  result.push(
+    [...items]
+  )
+
+  let i = 1;
+  while (i < items.length) {
+    if (counters[i] < i) {
+      if (i % 2 === 0) {
+        swap(items, 0, i)
+      } else {
+        swap(items, counters[i], i)
+      }
+
+      result.push(
+        [...items]
       )
-    })
-  } else {
-    cb(result)
+
+      counters[i] += 1
+
+      i = 1
+    } else {
+      counters[i] = 0
+      i += 1
+    }
   }
+
+  return result
 }
 
-const maxWindowSize = 4
+const swap = (items, iA, iB) => {
+  const toSwap = items[iA]
+  items[iA] = items[iB]
+  items[iB] = toSwap
+}
+
+const maxWindowSize = 6
 const getSubSequences = (sequence) => {
   const result = []
 
@@ -82,9 +123,7 @@ const getSubSequences = (sequence) => {
         subSequence.push(sequence[j])
       }
 
-      const permutations = []
-      getPermutations(subSequence, (permutation) => permutations.push(permutation))
-      result.push({subSequence, permutations})
+      result.push({subSequence, permutations: getPermutations(subSequence)})
     }
   }
 
