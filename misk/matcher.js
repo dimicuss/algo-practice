@@ -1,7 +1,8 @@
 const {readFile} = require("fs");
 const {inspect} = require("util");
+const data = require('./data.json')
 
-const atom = '(?:[A-ZА-ЯЁ][a-zа-яё]+(?:-[a-zа-я]+)?)'
+const atom = '(?:[A-ZА-ЯЁ][a-zа-яёA-ZА-ЯЁ]+(?:-[a-zа-яA-ZА-ЯЁ]+)?)'
 const space = '\\s+'
 const infixes = ['да']
 
@@ -18,7 +19,7 @@ const matchNames = (string) => {
   const regex = new RegExp(matchers, 'g')
 
   let result
-  let results = []
+  let matchedNames = []
   let chainedResults = []
 
   while ((result = regex.exec(string)) !== null) {
@@ -40,7 +41,7 @@ const matchNames = (string) => {
       })
 
       if (chainedResults.length > 1) {
-        results.push(getSubSequences(chainedResults))
+        matchedNames.push(getSubSequences(chainedResults))
       }
 
       chainedResults = []
@@ -57,10 +58,11 @@ const matchNames = (string) => {
   }
 
   if (chainedResults.length > 1) {
-    results.push(getSubSequences(chainedResults))
+    matchedNames.push(getSubSequences(chainedResults))
   }
 
-  return results
+
+  return matchedNames
 }
 
 function countEditoralSize(a, b) {
