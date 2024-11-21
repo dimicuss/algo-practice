@@ -8,7 +8,6 @@ const infixes = ['да']
 const word = `${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?`
 const reduction = `[A-ZА-ЯЁ]\\.`
 
-
 const matchers = [
   `(${word})(?=${space}${word})`,
   `(${word})`,
@@ -41,10 +40,7 @@ const matchNames = (string) => {
       })
 
       if (chainedResults.length > 1) {
-        results.push({
-          sequence: chainedResults,
-          allSubscequences: getSubSequences(chainedResults)
-        })
+        results.push(getSubSequences(chainedResults))
       }
 
       chainedResults = []
@@ -61,13 +57,30 @@ const matchNames = (string) => {
   }
 
   if (chainedResults.length > 1) {
-    results.push({
-      sequence: chainedResults,
-      allSubscequences: getSubSequences(chainedResults)
-    })
+    results.push(getSubSequences(chainedResults))
   }
 
   return results
+}
+
+function countEditoralSize(a, b) {
+  let dp = Array.from({length: b.length + 1}, (_, i) => i)
+
+  for (let i = 1; i <= a.length; i++) {
+    const newDp = Array.from({length: b.length + 1}).fill(i)
+
+    for (let j = 1; j <= b.length; j++) {
+      newDp[j] = Math.min(
+        newDp[j - 1] + 1,
+        dp[j] + 1,
+        dp[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      )
+    }
+
+    dp = newDp
+  }
+
+  return dp[b.length]
 }
 
 const getPermutations = (itemsToClone) => {
@@ -105,12 +118,6 @@ const getPermutations = (itemsToClone) => {
   return result
 }
 
-const swap = (items, iA, iB) => {
-  const toSwap = items[iA]
-  items[iA] = items[iB]
-  items[iB] = toSwap
-}
-
 const maxWindowSize = 6
 const getSubSequences = (sequence) => {
   const result = []
@@ -123,13 +130,24 @@ const getSubSequences = (sequence) => {
         subSequence.push(sequence[j])
       }
 
-      result.push({subSequence, permutations: getPermutations(subSequence)})
+      result.push({
+        start: subSequence[0].start,
+        end: subSequence[subSequence.length - 1].end,
+        permutations: getPermutations(subSequence).map((permutation) => permutation.map(({string}) => string).join(' '))
+      })
     }
   }
 
   return result
 }
 
+const swap = (items, iA, iB) => {
+  const toSwap = items[iA]
+  items[iA] = items[iB]
+  items[iB] = toSwap
+}
+
 readFile(0, (_, data) => {
   console.log(inspect(matchNames(data.toString()), false, Infinity))
 })
+
