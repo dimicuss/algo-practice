@@ -70,13 +70,13 @@ const matchNames = (string) => {
     match.forEach(({start, end, permutations}) => {
       permutations.forEach((permutation) => {
         handledData.forEach(({title}) => {
-          const ratio = countEditoralSize(permutation, title) / title.length
+          const ratio = countEditoralSize(title, permutation)
           matches.push({permutation, title, ratio, start, end})
         })
       })
     })
 
-    const maximalMatch = matches.sort((a, b) => a.ratio - b.ratio)[0]
+    const maximalMatch = matches.sort((a, b) => a.ratio - b.ratio).slice(0, 5)
 
     matchResult.push(maximalMatch)
   })
