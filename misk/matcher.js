@@ -1,6 +1,6 @@
 const {readFile} = require("fs");
 const {inspect} = require("util");
-const data = require('./data.json')
+const persons = require('./data.json')
 
 const atom = '(?:[A-ZА-ЯЁ][a-zа-яёA-ZА-ЯЁ]+(?:-[a-zа-яA-ZА-ЯЁ]+)?)'
 const space = '\\s+'
@@ -15,7 +15,7 @@ const matchers = [
   `(${reduction})(?=(?:\\s?${reduction})|(?:\\s?${word}))`
 ].join('|')
 
-const handledData = data.filter(({title}) => title.length > 0)
+const handledPersons = persons.filter(({title}) => title.length > 0)
 
 const matchNames = (string) => {
   const regex = new RegExp(matchers, 'g')
@@ -69,14 +69,14 @@ const matchNames = (string) => {
     const matches = []
     match.forEach(({start, end, permutations}) => {
       permutations.forEach((permutation) => {
-        handledData.forEach(({title}) => {
-          const ratio = countEditoralSize(title, permutation)
-          matches.push({permutation, title, ratio, start, end})
+        handledPersons.forEach((person) => {
+          const size = countEditoralSize(person.title, permutation)
+          matches.push({permutation, person, size, start, end})
         })
       })
     })
 
-    const maximalMatch = matches.sort((a, b) => a.ratio - b.ratio).slice(0, 5)
+    const maximalMatch = matches.sort((a, b) => a.size - b.size).slice(0, 3)
 
     matchResult.push(maximalMatch)
   })
