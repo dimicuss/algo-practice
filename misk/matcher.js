@@ -4,7 +4,7 @@ const data = require('./data.json')
 
 const atom = '(?:[A-ZА-ЯЁ][a-zа-яёA-ZА-ЯЁ]+(?:-[a-zа-яA-ZА-ЯЁ]+)?)'
 const space = '\\s+'
-const infixes = ['да']
+const infixes = ['да', 'дер']
 
 const word = `${atom}(?:${space}(?:${infixes.join('|')})${space}${atom})?`
 const reduction = `[A-ZА-ЯЁ]\\.`
@@ -14,6 +14,8 @@ const matchers = [
   `(${word})`,
   `(${reduction})(?=(?:\\s?${reduction})|(?:\\s?${word}))`
 ].join('|')
+
+const handledData = data.filter(({title}) => title.length > 0)
 
 const matchNames = (string) => {
   const regex = new RegExp(matchers, 'g')
@@ -61,8 +63,25 @@ const matchNames = (string) => {
     matchedNames.push(getSubSequences(chainedResults))
   }
 
+  const matchResult = []
 
-  return matchedNames
+  matchedNames.forEach((match) => {
+    const matches = []
+    match.forEach(({start, end, permutations}) => {
+      permutations.forEach((permutation) => {
+        handledData.forEach(({title}) => {
+          const ratio = countEditoralSize(permutation, title) / title.length
+          matches.push({permutation, title, ratio, start, end})
+        })
+      })
+    })
+
+    const maximalMatch = matches.sort((a, b) => a.ratio - b.ratio)[0]
+
+    matchResult.push(maximalMatch)
+  })
+
+  return matchResult
 }
 
 function countEditoralSize(a, b) {
