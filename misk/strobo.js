@@ -39,99 +39,76 @@ const generateIndexesByStringSize = (n) => {
     return indexes;
 };
 
-const getIndexOfNumber = (num) => {
-    if (baseIndexes[num]) {
-        return baseIndexes[num];
-    }
+const createIdx = (n) => {
+    const indexes = generateIndexesByStringSize(n);
 
-    const indexes = generateIndexesByStringSize(num.length);
-    const middle = num.length / 2;
-    let rest, nextNum, variants, decrease;
+    const _createIdx = (num) => {
+        if (baseIndexes[num] !== undefined) {
+            return baseIndexes[num];
+        }
 
-    if (num.length % 2 === 0) {
-        rest = num.slice(0, middle - 1) + num.slice(middle + 1);
-        nextNum = num.slice(middle - 1, middle + 1);
-        variants = 5;
-        decrease = evenDecreaseMap[nextNum];
-    } else {
-        rest = num.slice(0, middle) + num.slice(middle + 1);
-        nextNum = num.slice(middle, middle + 1);
-        variants = 3;
-        decrease = oddDecreaseMap[nextNum];
-    }
+        const middle = num.length / 2;
+        let rest, nextNum, variants, decrease;
 
-    const base = indexes[num.length - 1];
-    const restPositionInOwnGroup =
-        getIndexOfNumber(rest) - indexes[rest.length - 1];
-    const result = base + restPositionInOwnGroup * variants - decrease;
-    return result;
+        if (num.length % 2 === 0) {
+            rest = num.slice(0, middle - 1) + num.slice(middle + 1);
+            nextNum = num.slice(middle - 1, middle + 1);
+            variants = 5;
+            decrease = evenDecreaseMap[nextNum];
+        } else {
+            rest = num.slice(0, middle) + num.slice(middle + 1);
+            nextNum = num.slice(middle, middle + 1);
+            variants = 3;
+            decrease = oddDecreaseMap[nextNum];
+        }
+
+        const base = indexes[num.length - 1];
+
+        const restPositionInOwnGroup =
+            _createIdx(rest) - indexes[rest.length - 1];
+        const result = base + restPositionInOwnGroup * variants - decrease;
+        return result;
+    };
+
+    return _createIdx;
 };
 
-const getNextInlineSingleChar = (num) => {
-    if (num <= "0") {
-        return "0";
-    }
-
-    if (num <= "1") {
-        return "1";
-    }
-
-    if (num <= "6") {
-        return "6";
-    }
-
-    if (num <= "8") {
-        return "8";
-    }
-
-    return "9";
+const singleRound = (num) => {
+    return (
+        (num <= "0" && "0") ||
+        (num <= "1" && "1") ||
+        (num <= "6" && "6") ||
+        (num <= "8" && "8") ||
+        "9"
+    );
 };
 
-const getNextSingleChar = (num) => {
-    if (num <= "0") {
-        return "0";
-    }
-
-    if (num <= "1") {
-        return "1";
-    }
-
-    return "8";
+const singleRoundOdd = (num) => {
+    return (num <= "0" && "0") || (num <= "1" && "1") || "8";
 };
 
-const getNextDoubleChar = (num) => {
-    if (num <= "00") {
-        return "11";
-    }
+const singleIncr = (num) => {
+    return (num <= "0" && "1") || (num <= "1" && "8") || "8";
+};
 
-    if (num <= "11") {
-        return "69";
-    }
-
-    if (num <= "69") {
-        return "88";
-    }
-
-    if (num <= "88") {
-        return "96";
-    }
-
-    return "96";
+const doubleIncr = (num) => {
+    return (
+        (num <= "00" && "11") ||
+        (num <= "11" && "69") ||
+        (num <= "88" && "96") ||
+        "96"
+    );
 };
 
 const getOppositeChar = (char) => {
-    if (char === "9") {
-        return "6";
-    }
-
-    if (char === "6") {
-        return "9";
-    }
-
-    return char;
+    return (char === "9" && "6") || (char === "6" && "9") || char;
 };
 
-const generateStrobo = (num) => {
+const generateNextStrobogramNumber = (num) => {
+    if (num === "0") {
+        return "0";
+    }
+
     const nextLine = [];
 
     let i = 0;
@@ -143,7 +120,7 @@ const generateStrobo = (num) => {
             nextLine[i] = "0";
             nextLine[j] = "0";
         } else {
-            const nextChar = getNextInlineSingleChar(num[i]);
+            const nextChar = singleRound(num[i]);
             if (nextChar !== num[i]) {
                 drop = true;
             }
@@ -157,7 +134,11 @@ const generateStrobo = (num) => {
     }
 
     if (i === j) {
-        nextLine[i] = getNextSingleChar(num[i]);
+        if (drop) {
+            nextLine[i] = "0";
+        } else {
+            nextLine[i] = singleRoundOdd(num[i]);
+        }
     }
 
     if (num > nextLine.join("")) {
@@ -176,7 +157,7 @@ const generateStrobo = (num) => {
             if (i < 0 || j >= nextLine.length) break;
 
             if (i === j) {
-                const nextChar = getNextSingleChar(nextLine[i]);
+                const nextChar = singleIncr(nextLine[i]);
                 if (nextChar === nextLine[i]) {
                     nextLine[i] = "0";
                 } else {
@@ -185,8 +166,7 @@ const generateStrobo = (num) => {
                 }
             } else {
                 const char = nextLine[i] + nextLine[j];
-                const nextChar = getNextDoubleChar(char);
-                console.log(char, nextChar);
+                const nextChar = doubleIncr(char);
                 if (nextChar === char) {
                     nextLine[i] = "0";
                     nextLine[j] = "0";
@@ -207,7 +187,17 @@ const generateStrobo = (num) => {
         nextLine.push("1");
     }
 
-    return [num, nextLine.join("")];
+    return nextLine.join("");
 };
 
-console.log(generateStrobo("9009"));
+const upsideDown = (a, b) => {
+    const idx = createIdx(b.length);
+
+    const aIdx = idx(generateNextStrobogramNumber(a));
+    const bNext = generateNextStrobogramNumber(b);
+
+    let bIdx = idx(bNext);
+    bIdx = bNext !== b ? bIdx - 1 : bIdx;
+
+    return bIdx - aIdx + 1;
+};
